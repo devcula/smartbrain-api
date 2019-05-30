@@ -12,12 +12,12 @@ app.use(cors());
 const db = knex({
     client: 'pg',
     connection: {
-        connectionString: process.env.DATABASE_URL,
-        // host: process.env.DATABASE_URL,
-        // user: 'devcula',
-        // password: 'password',
-        // database: 'smart-brain'
-        ssl: true
+        // connectionString: process.env.DATABASE_URL,
+        host: '127.0.0.1',
+        user: 'devcula',
+        password: 'password',
+        database: 'smart-brain'
+        // ssl: true
     }
 })
 
@@ -152,6 +152,6 @@ app.put("/update", (req, res) => {
     })
 })
 
-app.listen(process.env.PORT || 3000, () => {
-    console.log(`Server up and listening on port ${process.env.PORT}`);
+app.listen(3000, () => {
+    console.log(`Server up and listening on port 3000`);
 })
