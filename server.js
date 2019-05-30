@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const bcryptjs = require('bcryptjs');
 const cors = require('cors');
 const knex = require('knex');
+const Clarifai = require('clarifai');
 
 app.use(bodyParser.json());
 app.use(cors());
@@ -12,18 +13,24 @@ app.use(cors());
 const db = knex({
     client: 'pg',
     connection: {
-        connectionString: process.env.DATABASE_URL,
-        // host: process.env.DATABASE_URL,
-        // user: 'devcula',
-        // password: 'password',
-        // database: 'smart-brain'
-        ssl: true
+        // connectionString: process.env.DATABASE_URL,
+        host: '127.0.0.1',
+        user: 'devcula',
+        password: 'password',
+        database: 'smart-brain'
+        // ssl: true
     }
 })
 
+const clarifai = new Clarifai.App({
+    apiKey: '4d486af086af4bab919bd537a915c5c6'
+});
+
 const runtimeErrorLogger = (runtimeError) =>{
     fs.appendFile("./runtimeError.log", `\n${new Date()}, ${runtimeError.toString()}`, err => {
-        throw err;
+        if(err){
+            console.log(err);
+        }
     })
 }
 
@@ -52,6 +59,7 @@ app.get("/", (req, res) => {
 
 app.post("/register", (req, res) => {
     const { name, email, password } = req.body;
+    let responseSent = false;
     if(name && email && password){
         db.transaction(trx => {
             trx.insert({
@@ -68,27 +76,33 @@ app.post("/register", (req, res) => {
                 .returning("*")
                 .then(users =>{
                     res.status(200).json(users[0]);
+                    responseSent = true;
                 })
             })
             .then(response =>{
                 console.log("Going to commit");
                 trx.commit();
+                console.log("User successfully registered");
             })
             .catch(err => {
                 console.log("Error..Rolling back changes..Check log");
+                res.status(400).json({"message" : "User already exists"});
+                responseSent = true;
                 runtimeErrorLogger(err);
                 trx.rollback();
             })
         })
         .catch(err => {
-            console.log(err);
             runtimeErrorLogger(err);
-            res.status(500).send("Unable to register");
+            if(!responseSent){
+                res.status(500).json({"message" : "Technical error. Unable to register at the moment"});
+                responseSent = true;
+            }
         })
     }
     else{
         console.log("Bad data received. Unable to register");
-        res.status(400).send("Incomplete data provided");
+        res.status(400).json({"message" : "Incomplete data provided"});
     }
 })
 
@@ -107,29 +121,29 @@ app.post("/login", (req, res) => {
                     }
                     else{
                         console.log("User not found");
-                        res.status(400).send("User doesn't exist");
+                        res.status(400).json({"message" : "User doesn't exist"});
                     }
                 })
                 .catch(err => {
                     console.log("Error while fetching user");
                     runtimeErrorLogger(err);
-                    res.status(500).send("Technical error");
+                    res.status(500).json({"message" : "Technical Error"});
                 })
             }
             else{
                 console.log("Invalid Username/password");
-                res.status(400).json("Invalid email/password");
+                res.status(400).json({"message" : "Invalid email/password"});
             }
         }
         else{
             console.log("User credentials not found");
-            res.status(400).json("User doesn't exist");
+            res.status(400).json({"message": "User doesn't exist"});
         }
     })
     .catch(err => {
         console.log("Error while fetching credentials");
         runtimeErrorLogger(err);
-        res.status(500).send("Technical Error");
+        res.status(500).json({"message": "Technical Error"});
     })
 })
 
@@ -152,6 +166,19 @@ app.put("/update", (req, res) => {
     })
 })
 
-app.listen(process.env.PORT || 3000, () => {
-    console.log(`Server up and listening on port ${process.env.PORT}`);
+app.post("/clarifai", (req, res) => {
+    const {id, imageurl} = req.body;
+    console.log(req.body);
+    clarifai.models.predict(Clarifai.FACE_DETECT_MODEL, imageurl)
+        .then(response => {
+            res.status(200).json(response);
+        })
+        .catch(err => {
+            runtimeErrorLogger(err);
+            res.status(400).send("Bad request");
+        });
+})
+
+app.listen(3000, () => {
+    console.log(`Server up and listening on port 3000`);
 })
