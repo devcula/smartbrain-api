@@ -13,12 +13,12 @@ app.use(cors());
 const db = knex({
     client: 'pg',
     connection: {
-        // connectionString: process.env.DATABASE_URL,
-        host: '127.0.0.1',
-        user: 'devcula',
-        password: 'password',
-        database: 'smart-brain'
-        // ssl: true
+        connectionString: process.env.DATABASE_URL,
+        ssl: true
+        // host: '127.0.0.1',
+        // user: 'devcula',
+        // password: 'password',
+        // database: 'smart-brain'
     }
 })
 
@@ -168,7 +168,6 @@ app.put("/update", (req, res) => {
 
 app.post("/clarifai", (req, res) => {
     const {id, imageurl} = req.body;
-    console.log(req.body);
     clarifai.models.predict(Clarifai.FACE_DETECT_MODEL, imageurl)
         .then(response => {
             res.status(200).json(response);
@@ -179,6 +178,6 @@ app.post("/clarifai", (req, res) => {
         });
 })
 
-app.listen(3000, () => {
-    console.log(`Server up and listening on port 3000`);
+app.listen(process.env.PORT || 3000, () => {
+    console.log(`Server up and listening on port ${process.env.PORT}`);
 })
