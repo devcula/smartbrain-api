@@ -38,6 +38,7 @@ app.get("/", (req, res) => {
         })
         .catch(err => {
             console.log("error while fetching users from database");
+            res.status(500).send("Technical Error");
             throw err;
         })
     }
