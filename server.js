@@ -13,17 +13,17 @@ app.use(cors());
 const db = knex({
     client: 'pg',
     connection: {
-        connectionString: process.env.DATABASE_URL,
-        ssl: true
-        // host: '127.0.0.1',
-        // user: 'devcula',
-        // password: 'password',
-        // database: 'smart-brain'
+        // connectionString: process.env.DATABASE_URL,
+        // ssl: true
+        host: '127.0.0.1',
+        user: 'devcula',
+        password: 'password',
+        database: 'smart-brain'
     }
 })
 
 const clarifai = new Clarifai.App({
-    apiKey: '4d486af086af4bab919bd537a915c5c6'
+    apiKey: ''
 });
 
 const runtimeErrorLogger = (runtimeError) =>{
@@ -179,5 +179,5 @@ app.post("/clarifai", (req, res) => {
 })
 
 app.listen(process.env.PORT || 3000, () => {
-    console.log(`Server up and listening on port ${process.env.PORT}`);
+    console.log(`Server up and listening on port 3000`);
 })
