@@ -178,6 +178,6 @@ app.post("/clarifai", (req, res) => {
         });
 })
 
-app.listen(process.env.PORT || 3000, () => {
-    console.log(`Server up and listening on port 3000`);
+app.listen(process.env.PORT || 3001, () => {
+    console.log(`Server up and listening on port 3001`);
 })
